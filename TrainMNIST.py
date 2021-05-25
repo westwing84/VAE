@@ -24,7 +24,7 @@ cross_tower_ops = tf.distribute.HierarchicalCopyAllReduce(num_packs=1)
 strategy = tf.distribute.MirroredStrategy(cross_device_ops=cross_tower_ops)
 
 EPOCHS = 50
-BATCH_SIZE = 512
+BATCH_SIZE = 256
 ALL_BATCH_SIZE = BATCH_SIZE * strategy.num_replicas_in_sync
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -37,7 +37,7 @@ x_test = x_test.astype("float32") / 255
 train_dataset = tf.data.Dataset.from_tensor_slices(x_train).shuffle(input_dim).batch(ALL_BATCH_SIZE)
 test_dataset = tf.data.Dataset.from_tensor_slices(x_test).batch(ALL_BATCH_SIZE)
 
-latent_dim = 2
+latent_dim = 32
 
 with strategy.scope():
     vae_model = VAEModel(input_dim, latent_dim)

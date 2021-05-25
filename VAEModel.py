@@ -39,18 +39,19 @@ class VAEModel(tf.keras.Model):
     def vae_loss(self, x, x_re, z_mean, z_logvar, global_batch_size, reduction=tf.keras.losses.Reduction.NONE):
         # Kullback-Leibler loss
         kl_loss_metrics = KLLoss(reduction=reduction)
-        kl_loss = kl_loss_metrics(z_mean, z_logvar)
+        kl_loss = tf.nn.compute_average_loss(kl_loss_metrics(z_mean, z_logvar), global_batch_size=global_batch_size) / global_batch_size
 
         # Reconstruction loss
-        mse = tf.keras.losses.MeanSquaredError(reduction=reduction)
-        reconstruction_loss = self.input_dim * mse(x, x_re)
-        # reconstruction_loss = mse(x, x_re)
-        final_loss = K.mean(reconstruction_loss + kl_loss)
+        # mse = tf.keras.losses.MeanSquaredError(reduction=reduction)
+        mse = tf.keras.losses.BinaryCrossentropy(reduction=reduction)
+        reconstruction_loss = tf.nn.compute_average_loss(mse(x, x_re), global_batch_size=global_batch_size)
+
+        final_loss = reconstruction_loss + kl_loss
 
         return final_loss
 
-    # Reparametrization Trick
     def sampling(self, inputs):
+        # Reparametrization Trick
         z_mean, z_logvar = inputs
         batch = K.shape(z_mean)[0]
         dim = K.shape(z_mean)[1]
